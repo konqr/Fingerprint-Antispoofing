@@ -1,16 +1,11 @@
 %Konark Jain
 %27th Sept 2019
 
- imagePaths = glob('D:\Work\Acad\sem 7\BTP\data\*\*\*\*\*.bmp');
- %imagePaths = glob('D:\Work\Acad\sem 7\BTP\data\testGreenBit\017_21_0\Live\pres_A_01\FLAT_THUMB_RIGHT.bmp');
-% done = length(glob('D:\Work\Acad\sem 7\BTP\data\testGreenBit\02*\*\*\*.bmp'));
-% done2 = length(glob('D:\Work\Acad\sem 7\BTP\data\testGreenBit\017_21_0\*\*\*.bmp'));
-% done3 = length(glob('D:\Work\Acad\sem 7\BTP\data\testGreenBit\03*\*\*\*.bmp'));
-% done4 = length(glob('D:\Work\Acad\sem 7\BTP\data\testGreenBit\050_25_1\*\*\*.bmp'));
-% done5 = length(glob('D:\Work\Acad\sem 7\BTP\data\testGreenBit\04*\*\*\*.bmp'));
-%  imagePaths = imagePaths(done+done2+1:end);
+imagePaths = glob('D:\Work\Acad\BTP\data\testGreenBit\*\*\*\*.bmp');
+% done = length(glob('D:\Work\Acad\BTP\data\trainGreenBit\*\*\*\*_set.csv'));
+% imagePaths = imagePaths(done+1:end);
 % imagePaths = ['D:\Work\Acad\sem 7\BTP\data\testGreenBit\017_21_0\Live\pres_A_01\FLAT_THUMB_LEFT.bmp'];
-imagePaths = glob('D:\Work\Acad\sem 7\BTP\data\testGreenBit\017_21_0\*\*\FLAT_MIDDLE_LEFT.bmp');
+%imagePaths = glob('D:\Work\Acad\BTP\data\testGreenBit\017_21_0\Live\pres_A_01\FLAT_THUMB_LEFT.bmp');
 
 for i =1:length(imagePaths),
     imageName = imagePaths{i}
@@ -48,6 +43,7 @@ for i =1:length(imagePaths),
     rows = find(any(blob));
     cols= find(any(blob'));
     IM0 = imcrop(IM0, [rows(1), cols(1), rows(end)-rows(1),cols(end)-cols(1)]);
+    imwrite(255-uint8(IM0),[imageName(1:end-4),'_crop.png']);
     [a0,b0] = size(IM0);
     M = mean(mean(IM0));
     VAR = std(double(IM0(:)));
@@ -63,8 +59,8 @@ for i =1:length(imagePaths),
             end
         end
     end
-    IM0 = G;
-    [IMF1] = fun_GABOR_FILTER_BANK(IM0, GSM);
+    IM1 = G;
+    [IMF1] = fun_GABOR_FILTER_BANK(IM1, GSM);
     [IMF2] = fun_GABOR_FILTER_BANK(IMF1, GSM2);
     [IMF3] = fun_GABOR_FILTER_BANK(IMF2, GSM3);
     
@@ -87,20 +83,24 @@ for i =1:length(imagePaths),
     end
 
     BINF = Q > delta;
-
+    grayImage = uint8(255 * BINF);  % BIN is from Joseph's code.
+    imwrite(255-uint8(grayImage),[imageName(1:end-4),'_enh.png']);
+    blackImage = zeros(size(grayImage), 'uint8');
+    rgbImage = cat(3, blackImage , grayImage, blackImage); % Only green channel is non-zero.
+    %figure; imshow(rgbImage);
 %     ST1 = strel('disk',1);
 %     ST2 = strel('disk',3);
 %     %BINF2 = imerode(BINF,ST);
 %     BINF2 = imerode(BINF,ST1);
-%     %figure; imshow(BINF2);
+%     %% figure; imshow(BINF2);
 %     BINF3 = imdilate(BINF2,ST2);
-%     %figure; imshow(BINF3);
+%     %% figure; imshow(BINF3);
     BIN0 = bwmorph(BINF,'skel',Inf);
     BIN0 = bwmorph(BIN0, 'bridge');
-%     grayImage = uint8(255 * BIN0);  % BIN is from Joseph's code.
-%     blackImage = zeros(size(grayImage), 'uint8');
-%     rgbImage = cat(3, blackImage , grayImage, blackImage); % Only green channel is non-zero.
-%     figure; imshow(rgbImage);
+    grayImage = uint8(255 * BIN0);  % BIN is from Joseph's code.
+    blackImage = zeros(size(grayImage), 'uint8');
+    rgbImage = cat(3, blackImage , grayImage, blackImage); % Only green channel is non-zero.
+    %figure; imshow(rgbImage);
     H = [0 1 0; 1 1 1; 0 0 0];
     STR = strel('arbitrary',H);
     BIN_THINNED = BIN0;
@@ -133,11 +133,21 @@ for i =1:length(imagePaths),
     [ LOC_BIF, LOC_RID]  = fun_BIFURCATION_RID_END_DETECT(BIN_THINNED, MASK);
     [LOC_RID_TRIM, LOC_BIF_TRIM] = fun_RIDGE_WEEDING(BIN0, LOC_RID, LOC_BIF);
     LOC_BIF_TRIM = fun_BIFUR_WEEDING2(BIN0, LOC_BIF_TRIM);
-
+    
+%     ridge_signal = [];
+%     [h,w] = size(BIN0);
+%     for i = 2:h-1,
+%     for j = 2:w-1,
+%         if MASK(i,j) == 1,
+%             ridge_signal  = [ridge_signal IM0(i,j)];
+%         end
+%     end
+%     end
+    
     %Orientation
-    [orientIm, rel] = ridgeorient(uint8(IM0),1,3,3);
+    [orientIm, rel] = fun_RIDGE_ORIENTATION(uint8(IM0),1,3,3);
     orientIm = rad2deg(orientIm);
-    filename = [imageName(1:end-4),'_380x380.csv'];
+    filename = [imageName(1:end-4),'_set.csv'];
     [fid, msg] = fopen(filename, 'wt');
     if fid < 0
       error('Could not open file "%s" because "%s"', fid, msg);
@@ -151,7 +161,7 @@ for i =1:length(imagePaths),
     for k1 = 1:length(LOC_RID_TRIM),
         A = LOC_RID_TRIM{k1};
         theta = orientIm(A(1),A(2));
-        fprintf(fid, '%s,%d,%d,%f\n', 'BIF',A(2), A(1),theta);
+        fprintf(fid, '%s,%d,%d,%f\n', 'RID',A(2), A(1),theta);
     end
     fclose(fid);
     
@@ -164,24 +174,24 @@ for i =1:length(imagePaths),
 %     end
 %     fprintf(fid, '%s,%d \n', className,num_minutiae);
 %     fclose(fid);
-    %figure; imshow(uint8(255*BIN0));
-    figure; imshow(255-uint8(IM0)); hold on;
-    for k1 = 1:length(LOC_BIF_TRIM),
-        A = LOC_BIF_TRIM{k1};
-        plot(A(2), A(1),'r*'); hold on;
-        theta = orientIm(A(1),A(2));
-        u = cos(theta)*10;
-        v = sin(theta)*10;
-        quiver(A(2), A(1),u,v);hold on;
-    end
-    for k1 = 1:length(LOC_RID_TRIM),
-        A = LOC_RID_TRIM{k1};
-        plot(A(2), A(1),'g*'); hold on;
-        theta = orientIm(A(1),A(2));
-        u = cos(theta)*10;
-        v = sin(theta)*10;
-        quiver(A(2), A(1),u,v);hold on;
-    end
-    title('FINAL MINUTIA SET');
-    hold off;
+    %% figure; imshow(uint8(255*BIN0));
+    % figure; imshow(255-uint8(IM0)); hold on;
+%     for k1 = 1:length(LOC_BIF_TRIM),
+%         A = LOC_BIF_TRIM{k1};
+%         plot(A(2), A(1),'r*'); hold on;
+%         theta = orientIm(A(1),A(2));
+%         u = cos(theta)*10;
+%         v = sin(theta)*10;
+%         quiver(A(2), A(1),u,v);hold on;
+%     end
+%     for k1 = 1:length(LOC_RID_TRIM),
+%         A = LOC_RID_TRIM{k1};
+%         plot(A(2), A(1),'g*'); hold on;
+%         theta = orientIm(A(1),A(2));
+%         u = cos(theta)*10;
+%         v = sin(theta)*10;
+%         quiver(A(2), A(1),u,v);hold on;
+%     end
+%     title('FINAL MINUTIA SET');
+%     hold off;
 end

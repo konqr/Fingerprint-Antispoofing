@@ -1,4 +1,4 @@
-function [orientim, reliability] = ridgeorient(im, gradientsigma, blocksigma, orientsmoothsigma)
+function [orientim, reliability] = fun_RIDGE_ORIENTATION(im, gradientsigma, blocksigma, orientsmoothsigma)
     %
     % Konark Jain
     % Detect Local Ridge Orientation
