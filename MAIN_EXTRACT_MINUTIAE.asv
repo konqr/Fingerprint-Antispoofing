@@ -15,14 +15,14 @@ for i =1:length(imagePaths),
     end
     %% GABOR SINE
 
-    TR = 4 + sigma;
+    TR = 4;
     sigma1 = 2 + sigma;
     G1 = fun_GABOR_SINE_BASE(TR, sigma1);
 
-    TR2 = 4 + sigma; sigma3 = 2 + sigma;
+    TR2 = 4; sigma3 = 2 + sigma;
     G1_LAYER2 = fun_GABOR_SINE_BASE(TR2, sigma3);
 
-    TR2 = 4+sigma; sigma4 = 2 + sigma;
+    TR2 = 4; sigma4 = 2 + sigma;
     G1_LAYER3 = fun_GABOR_SINE_BASE(TR2, sigma4);
 
     %% GABOR SMOOTHER
@@ -51,7 +51,7 @@ for i =1:length(imagePaths),
     rows = find(any(blob));
     cols= find(any(blob'));
     IM0 = imcrop(IM0, [rows(1), cols(1), rows(end)-rows(1),cols(end)-cols(1)]);
-    %figure; imshow(IM0);
+    figure; imshow(IM0);
     imwrite(255-uint8(IM0),[imageName(1:end-4),'_crop.bmp']);
     [a0,b0] = size(IM0);
     M = mean(mean(IM0));
@@ -69,7 +69,7 @@ for i =1:length(imagePaths),
         end
     end
     IM1 = G;
-    %figure;imshow(uint8(G));
+    figure;imshow(uint8(G));
     [IMF1] = fun_GABOR_FILTER_BANK(IM1, GSM);
     [IMF2] = fun_GABOR_FILTER_BANK(IMF1, GSM2);
     [IMF3] = fun_GABOR_FILTER_BANK(IMF2, GSM3);
@@ -110,7 +110,7 @@ for i =1:length(imagePaths),
     grayImage = uint8(255 * BIN0);  % BIN is from Joseph's code.
     blackImage = zeros(size(grayImage), 'uint8');
     rgbImage = cat(3, blackImage , grayImage, blackImage); % Only green channel is non-zero.
-    %figure; imshow(rgbImage);
+    figure; imshow(rgbImage);
     H = [0 1 0; 1 1 1; 0 0 0];
     STR = strel('arbitrary',H);
     BIN_THINNED = BIN0;
@@ -185,23 +185,23 @@ for i =1:length(imagePaths),
 %     fprintf(fid, '%s,%d \n', className,num_minutiae);
 %     fclose(fid);
     %% figure; imshow(uint8(255*BIN0));
-%     figure; imshow(255-uint8(IM0)); hold on;
-%     for k1 = 1:length(LOC_BIF_TRIM),
-%         A = LOC_BIF_TRIM{k1};
-%         plot(A(2), A(1),'r*'); hold on;
-%         theta = orientIm(A(1),A(2));
-%         u = cos(theta)*10;
-%         v = sin(theta)*10;
-%         quiver(A(2), A(1),u,v);hold on;
-%     end
-%     for k1 = 1:length(LOC_RID_TRIM),
-%         A = LOC_RID_TRIM{k1};
-%         plot(A(2), A(1),'g*'); hold on;
-%         theta = orientIm(A(1),A(2));
-%         u = cos(theta)*10;
-%         v = sin(theta)*10;
-%         quiver(A(2), A(1),u,v);hold on;
-%     end
-%     title('FINAL MINUTIA SET');
-%     hold off;
+    figure; imshow(255-uint8(IM0)); hold on;
+    for k1 = 1:length(LOC_BIF_TRIM),
+        A = LOC_BIF_TRIM{k1};
+        plot(A(2), A(1),'r*'); hold on;
+        theta = orientIm(A(1),A(2));
+        u = cos(theta)*10;
+        v = sin(theta)*10;
+        quiver(A(2), A(1),u,v);hold on;
+    end
+    for k1 = 1:length(LOC_RID_TRIM),
+        A = LOC_RID_TRIM{k1};
+        plot(A(2), A(1),'g*'); hold on;
+        theta = orientIm(A(1),A(2));
+        u = cos(theta)*10;
+        v = sin(theta)*10;
+        quiver(A(2), A(1),u,v);hold on;
+    end
+    title('FINAL MINUTIA SET');
+    hold off;
 end

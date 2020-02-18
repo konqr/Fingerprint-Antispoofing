@@ -21,25 +21,25 @@ def skeletonize(mat):
 		ret,mat2 = cv2.threshold(mat,127,255,0)
 		element = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
 		done = False
-
+		c = 0
 		while( not done):
 		    eroded = cv2.erode(mat2,element)
 		    temp = cv2.dilate(eroded,element)
 		    temp = cv2.subtract(mat2,temp)
 		    skel = cv2.bitwise_or(skel,temp)
 		    mat2 = eroded.copy()
-
+		    c = c+1
 		    zeros = size - cv2.countNonZero(mat2)
-		    if zeros==size:
+		    if zeros==size or c>100:
 		        done = True
 		return skel
 
-img_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\trainGreenBit\\*\\*\\*\\*.bmp')
-img_enh_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\trainGreenBit\\*\\*\\*\\*_crop.png')
-minutiae_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\trainGreenBit\\*\\*\\*\\*_set.csv')
-done  = pd.read_csv('D:\\Work\\Acad\\BTP\\data\\trainGreenBit\\feature.csv')
+img_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\trainDigitalPersona\\*\\*\\*\\*.png')
+img_enh_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\trainDigitalPersona\\*\\*\\*\\*_crop.bmp')
+minutiae_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\trainDigitalPersona\\*\\*\\*\\*_set.csv')
+# done  = pd.read_csv('D:\\Work\\Acad\\BTP\\data\\trainGreenBit\\feature.csv')
 data = pd.DataFrame()
-
+done = []
 for n in range(len(done),len(minutiae_paths),1):
 	img  = cv.imread(img_paths[n],0)
 	img_enh = cv.imread(img_enh_paths[n],0)
@@ -55,6 +55,7 @@ for n in range(len(done),len(minutiae_paths),1):
 	Y = minutiae.iloc[:,1]
 	patches = []
 	ocl = []
+	bw_rat = []
 	fft_v = pd.DataFrame()
 	fft_r = pd.DataFrame()
 	for i in range(len(X)):
@@ -80,8 +81,12 @@ for n in range(len(done),len(minutiae_paths),1):
 		skel_ridge = skeletonize(255-mat)
 		hist_ridge = cv2.calcHist([mat],[0],skel_ridge,[8],[0,256])
 		#fft
-		fft_v = fft_v.append([list(np.absolute(np.fft.fft(hist_valley)))],ignore_index = True)
-		fft_r = fft_r.append([list(np.absolute(np.fft.fft(hist_ridge)))], ignore_index = True)
+		fft_v = fft_v.append([list(hist_valley)],ignore_index = True)
+		fft_r = fft_r.append([list(hist_ridge)], ignore_index = True)
+		"""np.absolute(np.fft.fft(hist_ridge))"""
+		#b/w ratio
+		binary = mat > 128
+		bw_rat.append(np.sum(binary)/(32*32))
 
 	#print(ocl)
 	num_minutiae = len(X)	
@@ -95,14 +100,16 @@ for n in range(len(done),len(minutiae_paths),1):
 	ocl_var = np.var(ocl)
 	fft_r_mean = list(fft_r.mean(axis = 0))
 	fft_v_mean = list(fft_v.mean(axis = 0))
-
+	bw_rat_mean = np.mean(bw_rat)
 	if img_paths[n].find("Live") == -1:
 		flag = 0
 	else:
 		flag = 1
 
-	features = np.asarray(([flag, num_minutiae, energy, entropy, median, variance,skewness,kurt,ocl_mean,ocl_var]+fft_v_mean+fft_r_mean)).ravel()
+	features = np.asarray(([flag, num_minutiae, energy, entropy, median, variance,skewness,kurt,ocl_mean,,bw_rat_mean]+fft_v_mean+fft_r_mean)).ravel()
 	data = data.append([list(features)], ignore_index=True)
 	print(n, '\r', end = '')
 		
-data.to_csv('D:\\Work\\Acad\\BTP\\data\\trainGreenBit\\feature.csv',mode='a', header=False)
+data.to_csv('D:\\Work\\Acad\\BTP\\data\\trainDigitalPersona\\feature2.csv',mode='a', header=False)
+
+"""cv2.imshow('ImageWindow', img); cv2.waitKey()"""
