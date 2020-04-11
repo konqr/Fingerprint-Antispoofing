@@ -34,34 +34,37 @@ def skeletonize(mat):
 		        done = True
 		return skel
 
-img_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\trainDigitalPersona\\*\\*\\*\\*.png')
-img_enh_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\trainDigitalPersona\\*\\*\\*\\*_crop.bmp')
-minutiae_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\trainDigitalPersona\\*\\*\\*\\*_set.csv')
-# done  = pd.read_csv('D:\\Work\\Acad\\BTP\\data\\trainGreenBit\\feature.csv')
+img_gabor_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\testGreenBit\\*\\*\\*\\*_enh.png')
+img_enh_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\testGreenBit\\*\\*\\*\\*_crop.png')
+minutiae_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\testGreenBit\\*\\*\\*\\*_set.csv')
+# done  = pd.read_csv('D:\\Work\\Acad\\BTP\\data\\testGreenBit\\feature.csv')
+print(len(img_gabor_paths))
 data = pd.DataFrame()
 done = []
 for n in range(len(done),len(minutiae_paths),1):
-	img  = cv.imread(img_paths[n],0)
+	img_gabor  = cv.imread(img_gabor_paths[n],0)
 	img_enh = cv.imread(img_enh_paths[n],0)
 	try:
 		minutiae = pd.read_csv(minutiae_paths[n], header=None)
 	except:
 		continue
 	#PRIMARY LEVEL TEXTURE FEATURES
-	hist = cv.calcHist([img],[0],None,[256],[0,256])
-
+	hist = cv.calcHist([img_enh],[0],None,[256],[0,256])
 	#SECONDARY LEVEL TEXTURE FEATURES
 	X = minutiae.iloc[:,2]
 	Y = minutiae.iloc[:,1]
 	patches = []
+	gabor_patches = []
 	ocl = []
 	bw_rat = []
 	fft_v = pd.DataFrame()
 	fft_r = pd.DataFrame()
 	for i in range(len(X)):
 		patches.append(np.asarray(img_enh[X[i]-16:X[i]+16, Y[i]-16:Y[i]+16]))
+		gabor_patches.append(np.asarray(img_gabor[X[i]-16:X[i]+16, Y[i]-16:Y[i]+16]))
 	for i in range(len(patches)):
 		mat = patches[i]
+		gabor_mat = gabor_patches[i]
 		if mat.shape != (32,32):
 			#print(mat.shape)
 			continue
@@ -71,18 +74,21 @@ for n in range(len(done),len(minutiae_paths),1):
 		# sobelyy = cv.Sobel(sobely,cv.CV_64F,0,1,ksize=3)
 		# sobelxy = cv.Sobel(sobelx,cv.CV_64F,0,1,ksize=3)
 		# oimg = np.pi/2 + 1/2*(np.arctan2(sobelxx-sobelyy,2*sobelxy))
+		# #Feature: RIDGE WIDTH
+		# normal_img = np.pi/2 + oimg
 
 		#Feature: ORIENTATION CERTAINTY
 		ocl.append(orient_certainty(mat,sobelx,sobely))
 
 		#Feature: Ridge-Valley signal extraction
-		skel_valley = skeletonize(mat)
+		skel_valley = skeletonize(gabor_mat)
+
 		hist_valley = cv2.calcHist([mat],[0],skel_valley,[8],[0,256])
-		skel_ridge = skeletonize(255-mat)
+		skel_ridge = skeletonize(255-gabor_mat)
 		hist_ridge = cv2.calcHist([mat],[0],skel_ridge,[8],[0,256])
 		#fft
-		fft_v = fft_v.append([list(hist_valley)],ignore_index = True)
-		fft_r = fft_r.append([list(hist_ridge)], ignore_index = True)
+		fft_v = fft_v.append([list(np.absolute(np.fft.fft(hist_valley)))],ignore_index = True)
+		fft_r = fft_r.append([list(np.absolute(np.fft.fft(hist_ridge)))], ignore_index = True)
 		"""np.absolute(np.fft.fft(hist_ridge))"""
 		#b/w ratio
 		binary = mat > 128
@@ -101,15 +107,15 @@ for n in range(len(done),len(minutiae_paths),1):
 	fft_r_mean = list(fft_r.mean(axis = 0))
 	fft_v_mean = list(fft_v.mean(axis = 0))
 	bw_rat_mean = np.mean(bw_rat)
-	if img_paths[n].find("Live") == -1:
+	if img_enh_paths[n].find("Live") == -1:
 		flag = 0
 	else:
 		flag = 1
 
-	features = np.asarray(([flag, num_minutiae, energy, entropy, median, variance,skewness,kurt,ocl_mean,,bw_rat_mean]+fft_v_mean+fft_r_mean)).ravel()
+	features = np.asarray(([flag, num_minutiae, energy, entropy, median, variance,skewness,kurt,ocl_mean, ocl_var,bw_rat_mean]+fft_v_mean+fft_r_mean)).ravel()
 	data = data.append([list(features)], ignore_index=True)
 	print(n, '\r', end = '')
 		
-data.to_csv('D:\\Work\\Acad\\BTP\\data\\trainDigitalPersona\\feature2.csv',mode='a', header=False)
+data.to_csv('D:\\Work\\Acad\\BTP\\data\\testGreenBit\\feature.csv', header=False)
 
 """cv2.imshow('ImageWindow', img); cv2.waitKey()"""

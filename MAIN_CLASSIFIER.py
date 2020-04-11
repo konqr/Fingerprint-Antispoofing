@@ -4,8 +4,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier as rcf
 from sklearn.metrics import confusion_matrix
+import numpy as np
 
-data = pd.read_csv('/mnt/d/Work/Acad/BTP/data/trainDigitalPersona/feature3.csv',header=None)
+data = pd.read_csv('/mnt/d/Work/Acad/BTP/data/trainGreenBit/feature.csv',header=None)
 data.dropna(inplace=True)
 X_train = data.iloc[:,2:]
 y_train = data.iloc[:,1]
@@ -13,7 +14,7 @@ scaler = StandardScaler().fit(X_train)
 X_train = scaler.transform(X_train)
 #X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=.05, random_state=42)
 
-testdata = pd.read_csv('/mnt/d/Work/Acad/BTP/data/testDigitalPersona/feature3.csv',header=None)
+testdata = pd.read_csv('/mnt/d/Work/Acad/BTP/data/testGreenBit/feature.csv',header=None)
 testdata.dropna(inplace=True)
 X = testdata.iloc[:,2:]
 y = testdata.iloc[:,1]
@@ -62,5 +63,15 @@ Feature Importance:
 0 7 8 18 17
 num_minutiae ocl_mean, ocl_var Ridge(1), Valley(8)
 
-3.   
+3. Orcathu
+0.915 val MLPC
+0.8359 test MLPC
+
+100 val RFC
+100 test RFC
+
+Feature Importance:
+ 0  7 17 15  8
+ num_minutiae ocl_mean, ocl_var Ridge(1), Valley(8)
+   
 """

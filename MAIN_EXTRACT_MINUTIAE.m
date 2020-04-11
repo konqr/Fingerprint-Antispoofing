@@ -1,13 +1,13 @@
 %Konark Jain
 %27th Sept 2019
 
-imagePaths = glob('D:\Work\Acad\BTP\data\trainOrcathus\*\*\*\*.png');
-% done = length(glob('D:\Work\Acad\BTP\data\trainGreenBit\*\*\*\*_set.csv'));
+imagePaths = glob('D:\Work\Acad\BTP\data\t*Orcathus\*\*\*\*\*.png');
+done = length(glob('D:\Work\Acad\BTP\data\t*Orcathus\*\*\*\*\*_set.csv'));
 % imagePaths = imagePaths(done+1:end);
 % imagePaths = ['D:\Work\Acad\sem 7\BTP\data\testGreenBit\017_21_0\Live\pres_A_01\FLAT_THUMB_LEFT.bmp'];
 %imagePaths = glob('D:\Work\Acad\BTP\data\testGreenBit\017_21_0\Live\pres_A_01\FLAT_THUMB_LEFT.bmp');
 
-for i =1:length(imagePaths),
+for i =done-1:length(imagePaths),
     imageName = imagePaths{i}
     sigma = 0;
     if (~isempty(strfind(imageName,'Digital')))||(~isempty(strfind(imageName,'Orcathus')))
