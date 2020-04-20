@@ -15,3 +15,5 @@ V. Mura, G. Orru, R. Casula, A. Sibiriu, G. Loi, P. Tuveri, L. Ghiani, and G.L. 
 ”LivDet 2017 Fingerprint Liveness Detection Competition 2017”, International Conference
 on Biometrics (ICB 2018), 21-24, February, 2018, Goldcoast (Queensland, Australia), DOI:
 10.1109/ICB2018.2018.00052”
+
+https://github.com/RogerYong/Sweat_Pore_Recognition

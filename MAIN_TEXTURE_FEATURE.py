@@ -34,10 +34,10 @@ def skeletonize(mat):
 		        done = True
 		return skel
 
-img_gabor_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\testGreenBit\\*\\*\\*\\*_enh.png')
-img_enh_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\testGreenBit\\*\\*\\*\\*_crop.png')
-minutiae_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\testGreenBit\\*\\*\\*\\*_set.csv')
-# done  = pd.read_csv('D:\\Work\\Acad\\BTP\\data\\testGreenBit\\feature.csv')
+img_gabor_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\trainOrcathus\\*\\*\\*\\*\\*_enh.bmp')
+img_enh_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\trainOrcathus\\*\\*\\*\\*\\*_crop.bmp')
+minutiae_paths = glob.glob('D:\\Work\\Acad\\BTP\\data\\trainOrcathus\\*\\*\\*\\*\\*_set.csv')
+# done  = pd.read_csv('D:\\Work\\Acad\\BTP\\data\\trainOrcathus\\feature.csv')
 print(len(img_gabor_paths))
 data = pd.DataFrame()
 done = []
@@ -81,11 +81,15 @@ for n in range(len(done),len(minutiae_paths),1):
 		ocl.append(orient_certainty(mat,sobelx,sobely))
 
 		#Feature: Ridge-Valley signal extraction
-		skel_valley = skeletonize(gabor_mat)
-
-		hist_valley = cv2.calcHist([mat],[0],skel_valley,[8],[0,256])
-		skel_ridge = skeletonize(255-gabor_mat)
-		hist_ridge = cv2.calcHist([mat],[0],skel_ridge,[8],[0,256])
+		try:
+			skel_valley = skeletonize(gabor_mat)
+			hist_valley = cv2.calcHist([mat],[0],skel_valley,[8],[0,256])
+			skel_ridge = skeletonize(255-gabor_mat)
+			hist_ridge = cv2.calcHist([mat],[0],skel_ridge,[8],[0,256])
+		except: 
+			print("treble ", i)
+			hist_valley = np.zeros((32,))
+			hist_ridge = hist_valley
 		#fft
 		fft_v = fft_v.append([list(np.absolute(np.fft.fft(hist_valley)))],ignore_index = True)
 		fft_r = fft_r.append([list(np.absolute(np.fft.fft(hist_ridge)))], ignore_index = True)
@@ -116,6 +120,6 @@ for n in range(len(done),len(minutiae_paths),1):
 	data = data.append([list(features)], ignore_index=True)
 	print(n, '\r', end = '')
 		
-data.to_csv('D:\\Work\\Acad\\BTP\\data\\testGreenBit\\feature.csv', header=False)
+data.to_csv('D:\\Work\\Acad\\BTP\\data\\trainOrcathus\\feature.csv', mode='a', header=False)
 
 """cv2.imshow('ImageWindow', img); cv2.waitKey()"""
